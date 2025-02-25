@@ -1,26 +1,164 @@
 ---
-title: "saadams_OriginalHomeworkCode_03"
+title: "Homework 3: Some of my best friends are Zombies…"
 format: html
 editor: visual
 ---
 
-## Quarto
+## Scenario
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+This data includes the first name, last name, and gender of the entire population of 1000 people who have survived the zombie apocalypse and are now ekeing out an existence somewhere on the East Coast, along with several other variables (height, weight, age, number of years of education, number of zombies they have killed, and college major.
 
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Load Packages
 
 ```{r}
-1 + 1
+library(curl)
+library(tidyverse)
+library(gridExtra)
 ```
 
-You can add options to executable code like this
+## Load Data
 
 ```{r}
-#| echo: false
-2 * 2
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/refs/heads/master/AN588_Spring25/zombies.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Question 1
+
+*Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education). NOTE: You will not want to use the built in var() and sd() commands as these are for samples*
+
+```{r}
+# define population standard deviation function
+pop_sd <- function(x) {
+  sqrt(sum((x - mean(x))^2) / length(x))
+}
+
+# height
+pop_height <- mean(d$height)
+pop_height # population mean
+pop_height_sd <- pop_sd(d$height)
+pop_height_sd # population standard deviation
+
+# weight
+pop_weight <- mean(d$weight) 
+pop_weight
+pop_weight_sd <- pop_sd(d$weight)
+pop_weight_sd
+
+# age
+pop_age <- mean(d$age)
+pop_age
+pop_age_sd <- pop_sd(d$age)
+pop_age_sd
+
+# zombies killed
+pop_zombies_killed <- mean(d$zombies_killed) 
+pop_zombies_killed
+pop_zombies_killed_sd <- pop_sd(d$zombies_killed)
+pop_zombies_killed_sd
+
+# years of education
+pop_year_ed <- mean(d$years_of_education)
+pop_year_ed
+pop_year_ed_sd <- pop_sd(d$years_of_education)
+pop_year_ed_sd
+```
+
+## Question 2
+
+*Use {ggplot} to make boxplots of each of these variables by gender*
+
+```{r}
+# make box plot function
+boxplot_gender <- function(data, variable, title) {
+  ggplot(data, aes(x = gender, y = .data[[variable]], fill = gender)) + geom_boxplot() + labs(title = title, x = "Gender", y = variable) + scale_fill_manual(values = c("yellow", "pink", "lightblue"))
+} 
+
+boxplot_gender(d, "height", "Height by Gender")
+boxplot_gender(d, "weight", "Weight by Gender")
+boxplot_gender(d, "age", "Age by Gender")
+boxplot_gender(d, "zombies_killed", "Zombies Killed by Gender")
+boxplot_gender(d, "years_of_education", "Years of Education by Gender")
+
+```
+
+## Question 3
+
+*Use {ggplot} to make scatterplots of height and weight in relation to age. Do these variables seem to be related? In what way?*
+
+```{r}
+scatterplot_age <- function(data, variable, title) {
+  ggplot(data, aes(x = age, y = .data[[variable]])) + geom_point() + labs(title = title, x = "Gender", y = variable)
+}
+
+scatterplot_age(d, "height", "Age vs. Height")
+scatterplot_age(d, "weight", "Age vs. Weight")
+```
+
+Age vs. Height seems to have a relatively positive, linear relationship. Age vs. Weight has a lot of variability. There seems to be a weak positive linear relationship, but there probably wouldn't be a strong correlation.
+
+## Question 4
+
+*Using histograms and Q-Q plots, check whether the quantitative variables seem to be drawn from a normal distribution. Which seem to be and which do not (hint: not all are drawn from the normal distribution)? For those that are not normal, can you determine from which common distribution they are drawn?*
+
+```{r}
+# make histogram to look at normality of distribution
+histogram_norm_test <- function(data, variable, bins=30) {
+  ggplot(data, aes(x = .data[[variable]])) + geom_histogram(bins = bins, fill = "lightblue", color = "black") + labs(title = paste("Histogram of", variable), x = variable, y = "Frequency")
+}
+
+# make Q-Q plot to look at normality of distribution
+qqplot_norm_test <-function(data, variable) {
+  ggplot(data, aes(sample = .data[[variable]])) + stat_qq() + stat_qq_line(color = "blue") + labs(title = paste("QQ Plot of", variable), x = "Theoretical Quantiles", y = "Sample Quantiles")
+}
+
+# make plots for all quantitative variables
+variables <- c("height", "weight", "age", "zombies_killed", "years_of_education")
+
+hist_plots <- lapply(variables, function(var) histogram_norm_test(d, var))
+qq_plots <- lapply(variables, function(var) qqplot_norm_test(d, var))
+
+# arrange 2 x 5 layout
+grid.arrange(grobs = c(rbind(hist_plots, qq_plots)), ncol = 2)
+
+```
+Height, weight, and age appear normally distributed. Zombies killled might be a poisson distribution. Years of educaton seems slightly skewed to the right.
+
+## Question 5
+
+*Now use the sample() function to sample ONE subset of 30 zombie survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable, and construct the 95% confidence interval for each mean. Note that for the variables that are not drawn from the normal distribution, you may need to base your estimate of the CIs on slightly different code than for the normal…*
+
+```{r}
+set.seed(1) # seed makes sure same random numbers will be generated
+s <- d[sample(nrow(d), size = 30, replace = FALSE), ] # sample 30 indiviudals w/o replacement
+
+# set list of variables
+variables <- c("height", "weight", "age", "zombies_killed", "years_of_education")
+
+# apply mean and standard deviation to each variable
+sample_stats <- lapply(variables, function(var) {
+  list(
+    mean = mean(s[[var]]),  # calculate mean
+    sd = sd(s[[var]])       # calculate standard deviation
+  )
+})
+
+# print results
+names(sample_stats) <- variables  # assign variable names to the list
+print(sample_stats)
+
+#CI
+normalCI = function(x, CIlevel = 0.95) {
+    upper = m + qnorm(1 - (1 - CIlevel)/2) * sqrt(var(x)/length(x))
+    lower = m + qnorm((1 - CIlevel)/2) * sqrt(var(x)/length(x))
+    ci <- c(lower, upper)
+    return(ci)
+}
+
+normalCI(s$height, 0.95)
+
+```
+
+
+## Question 6
