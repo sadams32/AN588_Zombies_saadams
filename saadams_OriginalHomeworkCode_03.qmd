@@ -34,35 +34,16 @@ pop_sd <- function(x) {
   sqrt(sum((x - mean(x))^2) / length(x))
 }
 
-# height
-pop_height <- mean(d$height)
-pop_height # population mean
-pop_height_sd <- pop_sd(d$height)
-pop_height_sd # population standard deviation
+# store population mean and SD in list
+pop_stats <- list(
+  height = list(mean = mean(d$height), sd = pop_sd(d$height)), #height
+  weight = list(mean = mean(d$weight), sd = pop_sd(d$weight)), # weight
+  age = list(mean = mean(d$age), sd = pop_sd(d$age)), # age
+  zombies_killed = list(mean = mean(d$zombies_killed), sd = pop_sd(d$zombies_killed)), # zombies killed
+  years_of_education = list(mean = mean(d$years_of_education), sd = pop_sd(d$years_of_education)) # years of education
+)
 
-# weight
-pop_weight <- mean(d$weight) 
-pop_weight
-pop_weight_sd <- pop_sd(d$weight)
-pop_weight_sd
-
-# age
-pop_age <- mean(d$age)
-pop_age
-pop_age_sd <- pop_sd(d$age)
-pop_age_sd
-
-# zombies killed
-pop_zombies_killed <- mean(d$zombies_killed) 
-pop_zombies_killed
-pop_zombies_killed_sd <- pop_sd(d$zombies_killed)
-pop_zombies_killed_sd
-
-# years of education
-pop_year_ed <- mean(d$years_of_education)
-pop_year_ed
-pop_year_ed_sd <- pop_sd(d$years_of_education)
-pop_year_ed_sd
+pop_stats
 ```
 
 ## Question 2
@@ -123,42 +104,128 @@ qq_plots <- lapply(variables, function(var) qqplot_norm_test(d, var))
 grid.arrange(grobs = c(rbind(hist_plots, qq_plots)), ncol = 2)
 
 ```
-Height, weight, and age appear normally distributed. Zombies killled might be a poisson distribution. Years of educaton seems slightly skewed to the right.
+Height, weight, and age appear normally distributed. Zombies killled might be a poisson distribution. Years of educaton seems slightly skewed to the right and non-normal.
 
 ## Question 5
 
 *Now use the sample() function to sample ONE subset of 30 zombie survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable, and construct the 95% confidence interval for each mean. Note that for the variables that are not drawn from the normal distribution, you may need to base your estimate of the CIs on slightly different code than for the normal…*
 
+### Sample a subset of 30 zombie survivors
 ```{r}
 set.seed(1) # seed makes sure same random numbers will be generated
+
 s <- d[sample(nrow(d), size = 30, replace = FALSE), ] # sample 30 indiviudals w/o replacement
+```
 
-# set list of variables
-variables <- c("height", "weight", "age", "zombies_killed", "years_of_education")
+### Normal distribution CI calc
+```{r}
+normal_CI <- function(mean, sd, n) {
+  error_margin <- 1.96 * (sd / sqrt(n)) # Z-score calc
+  lower <- mean - error_margin
+  upper <- mean + error_margin
+  return(c(lower, upper))
+}
+```
 
-# apply mean and standard deviation to each variable
-sample_stats <- lapply(variables, function(var) {
-  list(
-    mean = mean(s[[var]]),  # calculate mean
-    sd = sd(s[[var]])       # calculate standard deviation
-  )
-})
+### Poisson distribution CI calc
+```{r}
+poisson_CI <- function(mean, n) {
+  error_margin <- 1.96 * sqrt(mean / n) # poisson SE = sqrt(mean/n)
+  lower <- mean - error_margin
+  upper <- mean + error_margin
+  return(c(lower, upper))
+}
+```
 
-# print results
-names(sample_stats) <- variables  # assign variable names to the list
-print(sample_stats)
-
-#CI
-normalCI = function(x, CIlevel = 0.95) {
-    upper = m + qnorm(1 - (1 - CIlevel)/2) * sqrt(var(x)/length(x))
-    lower = m + qnorm((1 - CIlevel)/2) * sqrt(var(x)/length(x))
-    ci <- c(lower, upper)
-    return(ci)
+### Bootstrapping for CI calc
+```{r}
+set <- NULL  # sets up a dummy variable to hold our 10000 simulations
+n <- 30
+for (i in 1:10000) {
+    set[i] <- mean(sample(d$years_of_education, n, replace = TRUE))
 }
 
-normalCI(s$height, 0.95)
+quantile(set)
+year_ed_CI <- quantile(set, c(0.025, 0.975)) # CI intervals 
+```
+
+```{r}
+height_CI <- normal_CI(mean(s$height), sd(s$height), n)
+weight_CI <- normal_CI(mean(s$weight), sd(s$weight), n)
+age_CI <- normal_CI(mean(s$age), sd(s$age), n)
+zombies_CI <- poisson_CI(mean(s$zombies_killed), n)
+
+CI_table <- data.frame(
+  Variable = c("Height", "Weight", "Age", "Zombies Killed", "Years of Education"),
+  Lower_CI = c(height_CI[1], weight_CI[1], age_CI[1], zombies_CI[1], year_ed_CI[1]),
+  Upper_CI = c(height_CI[2], weight_CI[2], age_CI[2], zombies_CI[2], year_ed_CI[2])
+)
+
+CI_table
+```
+
+## Question 6
+
+Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in [5]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?
+
+```{r}
+set.seed(1)  
+
+n_samples <- 100 # define number of samples we will take
+sample_size <- 30 # define sample size
+
+# make list to store the different means from each sample (100 total)
+sampling_means_df <- data.frame(
+  Height = numeric(n_samples),
+  Weight = numeric(n_samples),
+  Age = numeric(n_samples),
+  ZombiesKilled = numeric(n_samples),
+  YearsEd = numeric(n_samples)
+)
+
+# add sample from Q5 to the list
+sampling_means_df[1, ] <- c(mean(s$height), mean(s$weight), mean(s$age), 
+                            mean(s$zombies_killed), mean(s$years_of_education))
+
+# take 99 more random samples and store their means
+for (i in 2:n_samples) {
+  s_new <- d[sample(nrow(d), size = sample_size, replace = FALSE), ]
+  sampling_means_df[i, ] <- c(mean(s_new$height), mean(s_new$weight), mean(s_new$age), 
+                              mean(s_new$zombies_killed), mean(s_new$years_of_education))
+}
+
+head(sampling_means_df) # preview sampling means dataframe
 
 ```
 
+```{r}
+sampling_means_summary <- data.frame(
+  Variable = colnames(sampling_means_df),
+  Mean = colMeans(sampling_means_df),  # mean of each column (sampling distribution mean)
+  SD = apply(sampling_means_df, 2, sd)  # SD for each column
+)
 
-## Question 6
+sampling_means_summary
+
+# Compute standard errors (SE) from Q5 formulas
+se_estimates <- data.frame(
+  Variable = c("Height", "Weight", "Age", "ZombiesKilled", "YearsEd"),
+  se_estimate = c(
+    pop_stats$height$sd / sqrt(sample_size),
+    pop_stats$weight$sd / sqrt(sample_size),
+    pop_stats$age$sd / sqrt(sample_size),
+    sqrt(pop_stats$zombies_killed$mean / sample_size),  # poisson SE
+    (year_ed_CI[2] - year_ed_CI[1]) / (2 * 1.96)  #  SE from bootstrap
+  )
+)
+
+# Merge with sampling distribution summary
+comparison_df <- left_join(sampling_means_summary, se_estimates, by = "Variable")
+comparison_df
+```
+
+Height, Weight, Age: SD is approximately equal to SE estimate
+Zombies killed: sqrt(mean/n) is similar to SD 
+Years of education: bootsrapped CI (SE estimate in this case) is similar to SD of sampling distribution
+
+All of these statements indicate that the sampling distributions will be normally distributed.
