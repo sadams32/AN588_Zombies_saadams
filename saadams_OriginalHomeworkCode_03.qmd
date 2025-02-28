@@ -2,6 +2,12 @@
 title: "Homework 3: Some of my best friends are Zombies…"
 format: html
 editor: visual
+theme: flatly"
+toc: true
+toc-depth: 5
+code-block-bg: true
+code-block-border-left: "blue"
+highlight-style: "gruvbox"
 ---
 
 ## Scenario
