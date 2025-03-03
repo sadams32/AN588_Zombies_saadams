@@ -1,0 +1,265 @@
+---
+title: "Homework 3: Some of my best friends are Zombies…"
+format: html
+editor: visual
+theme: flatly
+toc: true
+toc-depth: 5
+code-block-bg: true
+code-block-border-left: "blue"
+highlight-style: "gruvbox"
+---
+![](img/zombie.png)
+
+## Scenario
+
+This data includes the first name, last name, and gender of the entire population of 1000 people who have survived the zombie apocalypse and are now ekeing out an existence somewhere on the East Coast, along with several other variables (height, weight, age, number of years of education, number of zombies they have killed, and college major.
+
+## Load Packages
+
+```{r}
+library(curl)
+library(tidyverse)
+library(gridExtra)
+```
+
+## Load Data
+
+```{r}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/refs/heads/master/AN588_Spring25/zombies.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+```
+
+## Question 1
+
+*Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education). NOTE: You will not want to use the built in var() and sd() commands as these are for samples*
+
+```{r}
+# define population standard deviation function
+pop_sd <- function(x) {
+  sqrt(sum((x - mean(x))^2) / length(x))
+}
+
+# store population mean and SD in list
+pop_stats <- list(
+  height = list(mean = mean(d$height), sd = pop_sd(d$height)), #height
+  weight = list(mean = mean(d$weight), sd = pop_sd(d$weight)), # weight
+  age = list(mean = mean(d$age), sd = pop_sd(d$age)), # age
+  zombies_killed = list(mean = mean(d$zombies_killed), sd = pop_sd(d$zombies_killed)), # zombies killed
+  years_of_education = list(mean = mean(d$years_of_education), sd = pop_sd(d$years_of_education)) # years of education
+)
+
+pop_stats
+```
+
+## Question 2
+
+*Use {ggplot} to make boxplots of each of these variables by gender*
+
+```{r}
+# make box plot function
+boxplot_gender <- function(data, variable, title, y_label) {
+  ggplot(data, aes(x = gender, y = .data[[variable]], fill = gender)) + geom_boxplot() + labs(title = title, x = "Gender", y = y_label) + scale_fill_manual(values = c("yellow", "pink", "lightblue"))
+} 
+
+boxplot_gender(d, "height", "Height by Gender", "Height (cm)")
+boxplot_gender(d, "weight", "Weight by Gender", "Weight (lb)")
+boxplot_gender(d, "age", "Age by Gender", "Age (years)")
+boxplot_gender(d, "zombies_killed", "Zombies Killed by Gender", "# Killed")
+boxplot_gender(d, "years_of_education", "Years of Education by Gender", "Years of Edu.")
+
+```
+
+## Question 3
+
+*Use {ggplot} to make scatterplots of height and weight in relation to age. Do these variables seem to be related? In what way?*
+
+```{r}
+scatterplot_age <- function(data, variable, title) {
+  ggplot(data, aes(x = age, y = .data[[variable]])) + geom_point() + labs(title = title, x = "Age", y = variable)
+}
+
+scatterplot_age(d, "height", "Age vs. Height")
+scatterplot_age(d, "weight", "Age vs. Weight")
+```
+
+Age vs. Height seems to have a relatively positive, linear relationship. Age vs. Weight has a lot of variability. There seems to be a weak positive linear relationship, but there probably wouldn't be a strong correlation.
+
+## Question 4
+
+*Using histograms and Q-Q plots, check whether the quantitative variables seem to be drawn from a normal distribution. Which seem to be and which do not (hint: not all are drawn from the normal distribution)? For those that are not normal, can you determine from which common distribution they are drawn?*
+
+```{r}
+# make histogram to look at normality of distribution
+histogram_norm_test <- function(data, variable, bins=30) {
+  ggplot(data, aes(x = .data[[variable]])) + geom_histogram(bins = bins, fill = "lightblue", color = "black") + labs(title = paste("Histogram of", variable), x = variable, y = "Frequency")
+}
+
+# make Q-Q plot to look at normality of distribution
+qqplot_norm_test <- function(data, variable) {
+  ggplot(data, aes(sample = .data[[variable]])) + stat_qq() + stat_qq_line(color = "blue") + labs(title = paste("QQ Plot of", variable), x = "Theoretical Quantiles", y = "Sample Quantiles")
+}
+
+# make plots for all quantitative variables
+variables <- c("height", "weight", "age", "zombies_killed", "years_of_education")
+
+hist_plots <- lapply(variables, function(var) histogram_norm_test(d, var))
+qq_plots <- lapply(variables, function(var) qqplot_norm_test(d, var))
+
+# arrange 2 x 5 layout
+grid.arrange(grobs = c(rbind(hist_plots, qq_plots)), ncol = 2)
+
+```
+
+Height, weight, and age appear normally distributed. Zombies killled might be a poisson distribution. Years of education seems slightly skewed to the right and non-normal.
+
+## Question 5
+
+*Now use the sample() function to sample ONE subset of 30 zombie survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable, and construct the 95% confidence interval for each mean. Note that for the variables that are not drawn from the normal distribution, you may need to base your estimate of the CIs on slightly different code than for the normal…*
+
+### Sample a subset of 30 zombie survivors
+
+```{r}
+set.seed(1) # seed makes sure same random numbers will be generated
+
+s <- d[sample(nrow(d), size = 30, replace = FALSE), ] # sample 30 indiviudals w/o replacement
+```
+
+### Normal distribution CI calc
+
+```{r}
+normal_CI <- function(mean, sd, n) {
+  error_margin <- 1.96 * (sd / sqrt(n)) # Z-score calc
+  lower <- mean - error_margin
+  upper <- mean + error_margin
+  return(c(lower, upper))
+}
+```
+
+### Poisson distribution CI calc
+
+```{r}
+poisson_CI <- function(mean, n) {
+  error_margin <- 1.96 * sqrt(mean / n) # poisson SE = sqrt(mean/n)
+  lower <- mean - error_margin
+  upper <- mean + error_margin
+  return(c(lower, upper))
+}
+```
+
+### Bootstrapping for CI calc
+
+```{r}
+boot_means <- numeric(10000)
+n <- 30
+
+for (i in 1:10000) {
+    boot_means[i] <- mean(sample(d$years_of_education, n, replace = TRUE))
+}
+
+quantile(boot_means)
+year_ed_CI <- quantile(boot_means, c(0.025, 0.975)) # CI intervals 
+```
+
+```{r}
+# mean, SD, SE calcs
+mean_height <- mean(s$height)
+sd_height <- sd(s$height)
+se_height <- sd_height / sqrt(n)
+
+mean_weight <- mean(s$weight)
+sd_weight <- sd(s$weight)
+se_weight <- sd_weight / sqrt(n)
+
+mean_age <- mean(s$age)
+sd_age <- sd(s$age)
+se_age <- sd_age / sqrt(n)
+
+mean_zombies <- mean(s$zombies_killed)
+sd_zombies <- sd(s$zombies_killed)
+se_zombies <- sqrt(mean_zombies / n) # poisson SE
+
+mean_year_ed <- mean(s$years_of_education)
+sd_year_ed <- sd(boot_means)
+se_year_ed <- sd_year_ed # SE for bootstrapping
+
+# CI calcs
+height_CI <- normal_CI(mean(s$height), sd(s$height), n)
+weight_CI <- normal_CI(mean(s$weight), sd(s$weight), n)
+age_CI <- normal_CI(mean(s$age), sd(s$age), n)
+zombies_CI <- poisson_CI(mean(s$zombies_killed), n)
+
+# make CI table
+CI_table <- data.frame(
+  Variable = c("Height", "Weight", "Age", "Zombies Killed", "Years of Education"),
+  Mean = c(mean_height, mean_weight, mean_age, mean_zombies, mean_year_ed),
+  SD = c(sd_height, sd_weight, sd_age, sd_zombies, sd_year_ed),
+  SE = c(se_height, se_weight, se_age, se_zombies, se_year_ed),
+  Lower_CI = c(height_CI[1], weight_CI[1], age_CI[1], zombies_CI[1], year_ed_CI[1]),
+  Upper_CI = c(height_CI[2], weight_CI[2], age_CI[2], zombies_CI[2], year_ed_CI[2])
+)
+
+CI_table
+```
+
+## Question 6
+
+Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in \[5\]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?
+
+```{r}
+set.seed(2)  
+
+n_samples <- 100 # define number of samples we will take
+sample_size <- 30 # define sample size
+
+# make list to store the different means from each sample (100 total)
+sampling_means_df <- data.frame(
+  Height = numeric(n_samples),
+  Weight = numeric(n_samples),
+  Age = numeric(n_samples),
+  ZombiesKilled = numeric(n_samples),
+  YearsEd = numeric(n_samples)
+)
+
+# add sample from Q5 to the list
+sampling_means_df[1, ] <- c(mean(s$height), mean(s$weight), mean(s$age), 
+                            mean(s$zombies_killed), mean(s$years_of_education))
+
+# take 99 more random samples and store their means
+for (i in 2:n_samples) {
+  s_new <- d[sample(nrow(d), size = sample_size, replace = FALSE), ]
+  sampling_means_df[i, ] <- c(mean(s_new$height), mean(s_new$weight), mean(s_new$age), 
+                              mean(s_new$zombies_killed), mean(s_new$years_of_education))
+}
+
+head(sampling_means_df) # preview sampling means dataframe
+
+```
+
+```{r}
+# make sampling means dataframe
+sampling_means_summary <- data.frame(
+  Variable = colnames(sampling_means_df),
+  Mean = colMeans(sampling_means_df),  # mean of each column (sampling distribution mean)
+  SD = apply(sampling_means_df, 2, sd)  # SD for each column
+)
+
+sampling_means_summary
+
+# fix variable names to be the same so they will match for merging below
+CI_table$Variable <- c("Height", "Weight", "Age", "ZombiesKilled", "YearsEd")
+
+# take SE from CI_table
+se_estimates <- CI_table[, c("Variable", "SE")]
+
+# merge w/ sampling distribution summary
+comparison_df <- left_join(sampling_means_summary, se_estimates, by = "Variable")
+colnames(comparison_df) <- c("Variable", "Mean of Sampling Dist.", "SD of Sampling Dist.", "SE from Q5 Sample")
+
+comparison_df
+```
+
+Height, Weight, Age: SD is approximately equal to SE estimate Zombies killed: sqrt(mean/n) is similar to SD Years of education: bootsrapped CI (SE estimate in this case) is not similar because 
+
+All of these statements indicate that the sampling distributions will be normally distributed.
