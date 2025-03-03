@@ -9,6 +9,7 @@ code-block-bg: true
 code-block-border-left: "blue"
 highlight-style: "gruvbox"
 ---
+
 ![](img/zombie.png)
 
 ## Scenario
@@ -260,6 +261,8 @@ colnames(comparison_df) <- c("Variable", "Mean of Sampling Dist.", "SD of Sampli
 comparison_df
 ```
 
-Height, Weight, Age: SD is approximately equal to SE estimate Zombies killed: sqrt(mean/n) is similar to SD Years of education: bootsrapped CI (SE estimate in this case) is not similar because 
+Height, Weight, Age: SD is approximately equal to SE estimate 
+Zombies killed: sqrt(mean/n) is similar to SD 
+Years of education: bootsrapped SE is also very similar to SD.
 
 All of these statements indicate that the sampling distributions will be normally distributed.
