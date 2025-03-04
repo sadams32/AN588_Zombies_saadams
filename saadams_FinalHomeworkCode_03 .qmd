@@ -2,7 +2,7 @@
 title: "Homework 3: Some of my best friends are Zombies…"
 format: html
 editor: visual
-theme: flatly
+theme: readthedown
 toc: true
 toc-depth: 5
 code-block-bg: true
@@ -19,6 +19,7 @@ This data includes the first name, last name, and gender of the entire populatio
 ## Load Packages
 
 ```{r}
+library(rmdformats)
 library(curl)
 library(tidyverse)
 library(gridExtra)
@@ -261,8 +262,6 @@ colnames(comparison_df) <- c("Variable", "Mean of Sampling Dist.", "SD of Sampli
 comparison_df
 ```
 
-Height, Weight, Age: SD is approximately equal to SE estimate 
-Zombies killed: sqrt(mean/n) is similar to SD 
-Years of education: bootsrapped SE is also very similar to SD.
+Height, Weight, Age: SD is approximately equal to SE estimate Zombies killed: sqrt(mean/n) is similar to SD Years of education: bootstrapped SE is also very similar to SD.
 
 All of these statements indicate that the sampling distributions will be normally distributed.
