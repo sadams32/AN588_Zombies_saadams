@@ -268,8 +268,8 @@ All of these statements indicate that the sampling distributions will be normall
 
 ## Notes
 
-Final Push: March 4, 2025 3:55 pm
-Push to add this note: March 27, 2025 7:39 pm
+Final Push: March 2, 2025 11:05 am; pushed with an edit to theme on March 4, 2025 3:55 pm
+Push to add this note: March 27, 2025 7:42 pm
 
 ### 1) What you learned from running their Original Homework Code that helped improve your own code.
 I think that I saw a better level of detail in the plots Claire made. For example adding units to my plot and thinking more about their organization improved my code.
