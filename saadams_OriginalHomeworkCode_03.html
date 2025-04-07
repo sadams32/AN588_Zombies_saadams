@@ -118,6 +118,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<p>//challenge// I don’t understand why the rmd themes don’t seem to be rendering right.</p>
 <section id="scenario" class="level2">
 <h2 class="anchored" data-anchor-id="scenario">Scenario</h2>
 <p>This data includes the first name, last name, and gender of the entire population of 1000 people who have survived the zombie apocalypse and are now ekeing out an existence somewhere on the East Coast, along with several other variables (height, weight, age, number of years of education, number of zombies they have killed, and college major.</p>
@@ -318,6 +319,7 @@ $years_of_education$sd
 </div>
 </div>
 <p>Age vs.&nbsp;Height seems to have a relatively positive, linear relationship. Age vs.&nbsp;Weight has a lot of variability. There seems to be a weak positive linear relationship, but there probably wouldn’t be a strong correlation.</p>
+<p>//challenge// I don’t know if more should be added to this interpretation</p>
 </section>
 <section id="question-4" class="level2">
 <h2 class="anchored" data-anchor-id="question-4">Question 4</h2>
@@ -350,6 +352,7 @@ $years_of_education$sd
 </div>
 </div>
 <p>Height, weight, and age appear normally distributed. Zombies killled might be a poisson distribution. Years of educaton seems slightly skewed to the right and non-normal.</p>
+<p>//challenge// my plots look okay on my end but i need to view them in a separate pane to get it to look right. I’m not sure if there is a better way to format this.</p>
 </section>
 <section id="question-5" class="level2">
 <h2 class="anchored" data-anchor-id="question-5">Question 5</h2>
@@ -400,6 +403,7 @@ $years_of_education$sd
 </div>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>year_ed_CI <span class="ot">&lt;-</span> <span class="fu">quantile</span>(set, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>)) <span class="co"># CI intervals </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>//challenge// not completely sure if bootstrapping is the appropriate way to go here</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>height_CI <span class="ot">&lt;-</span> <span class="fu">normal_CI</span>(<span class="fu">mean</span>(s<span class="sc">$</span>height), <span class="fu">sd</span>(s<span class="sc">$</span>height), n)</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>weight_CI <span class="ot">&lt;-</span> <span class="fu">normal_CI</span>(<span class="fu">mean</span>(s<span class="sc">$</span>weight), <span class="fu">sd</span>(s<span class="sc">$</span>weight), n)</span>
@@ -464,6 +468,7 @@ $years_of_education$sd
 6 66.12282 140.8420 18.55364      3.100000 2.866667</code></pre>
 </div>
 </div>
+<p>//challenge// I found it confusing to do 2:n_samples - I’m not sure if we were supposed to do something else or if I understood the question correctly.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>sampling_means_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Variable =</span> <span class="fu">colnames</span>(sampling_means_df),</span>
@@ -506,6 +511,7 @@ YearsEd             YearsEd   2.934000 0.3086112</code></pre>
 </div>
 <p>Height, Weight, Age: SD is approximately equal to SE estimate Zombies killed: sqrt(mean/n) is similar to SD Years of education: bootsrapped CI (SE estimate in this case) is similar to SD of sampling distribution</p>
 <p>All of these statements indicate that the sampling distributions will be normally distributed.</p>
+<p>//challenge// I don’t know if this is enough to say to they are all normally distributed approximately - I don’t know if there was more code I should write to ascertain this.</p>
 </section>
 
 </main>

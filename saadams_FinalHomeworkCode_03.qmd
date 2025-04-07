@@ -268,17 +268,20 @@ All of these statements indicate that the sampling distributions will be normall
 
 ## Notes
 
-Final Push: March 2, 2025 11:05 am; pushed with an edit to theme on March 4, 2025 3:55 pm
-Push to add this note: March 27, 2025 7:42 pm
+Final Push: March 2, 2025 11:05 am; pushed with an edit to theme on March 4, 2025 3:55 pm Push to add this note + notes about challenges to original (I thought I had written them down in document but I guess I did not?): April 6, 2025 8:46pm
 
 ### 1) What you learned from running their Original Homework Code that helped improve your own code.
+
 I think that I saw a better level of detail in the plots Claire made. For example adding units to my plot and thinking more about their organization improved my code.
 
 ### 2) What you did in your own code that might help to improve theirs.
+
 I think that initially Claire though that we couldn't use Z-scores - but I think we can since we have the population parameters. Also, I think I demosntrated the potential use of bootstrapping in this assignment to answer the questions asked.
 
 ### 3) What challenges, if any, you both faced in your code that could not be helped by comparison.
+
 I think we both struggled with question 4, and understanding that we needed to bootstrap to do part of this assignment. Other than that I think we both seemed to find tasks hard, but presented something pretty good and reasonable by the time we submitted for commentary.
 
 ### 4) Whether the annotation/commenting on your peer’s Original Homework Code is readable and interpretable to you, and if not then how it could be improved.
+
 I think Claire's code was pretty readable but might be harder to come back to if I hadn't been doing my own version of this assignment. For example, I think some questions lacked sufficient commenting to comfortably return to later (sometimes they were a little general and didn't explain the individual functions).

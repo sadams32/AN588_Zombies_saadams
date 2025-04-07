@@ -9,6 +9,7 @@ code-block-bg: true
 code-block-border-left: "blue"
 highlight-style: "gruvbox"
 ---
+//challenge// I don't understand why the rmd themes don't seem to be rendering right.
 
 ## Scenario
 
@@ -85,6 +86,8 @@ scatterplot_age(d, "weight", "Age vs. Weight")
 
 Age vs. Height seems to have a relatively positive, linear relationship. Age vs. Weight has a lot of variability. There seems to be a weak positive linear relationship, but there probably wouldn't be a strong correlation.
 
+//challenge// I don't know if more should be added to this interpretation
+
 ## Question 4
 
 *Using histograms and Q-Q plots, check whether the quantitative variables seem to be drawn from a normal distribution. Which seem to be and which do not (hint: not all are drawn from the normal distribution)? For those that are not normal, can you determine from which common distribution they are drawn?*
@@ -110,13 +113,17 @@ qq_plots <- lapply(variables, function(var) qqplot_norm_test(d, var))
 grid.arrange(grobs = c(rbind(hist_plots, qq_plots)), ncol = 2)
 
 ```
+
 Height, weight, and age appear normally distributed. Zombies killled might be a poisson distribution. Years of educaton seems slightly skewed to the right and non-normal.
+
+//challenge// my plots look okay on my end but i need to view them in a separate pane to get it to look right. I'm not sure if there is a better way to format this.
 
 ## Question 5
 
 *Now use the sample() function to sample ONE subset of 30 zombie survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable, and construct the 95% confidence interval for each mean. Note that for the variables that are not drawn from the normal distribution, you may need to base your estimate of the CIs on slightly different code than for the normal…*
 
 ### Sample a subset of 30 zombie survivors
+
 ```{r}
 set.seed(1) # seed makes sure same random numbers will be generated
 
@@ -124,6 +131,7 @@ s <- d[sample(nrow(d), size = 30, replace = FALSE), ] # sample 30 indiviudals w/
 ```
 
 ### Normal distribution CI calc
+
 ```{r}
 normal_CI <- function(mean, sd, n) {
   error_margin <- 1.96 * (sd / sqrt(n)) # Z-score calc
@@ -134,6 +142,7 @@ normal_CI <- function(mean, sd, n) {
 ```
 
 ### Poisson distribution CI calc
+
 ```{r}
 poisson_CI <- function(mean, n) {
   error_margin <- 1.96 * sqrt(mean / n) # poisson SE = sqrt(mean/n)
@@ -144,6 +153,7 @@ poisson_CI <- function(mean, n) {
 ```
 
 ### Bootstrapping for CI calc
+
 ```{r}
 set <- NULL  # sets up a dummy variable to hold our 10000 simulations
 n <- 30
@@ -154,6 +164,8 @@ for (i in 1:10000) {
 quantile(set)
 year_ed_CI <- quantile(set, c(0.025, 0.975)) # CI intervals 
 ```
+
+//challenge// not completely sure if bootstrapping is the appropriate way to go here
 
 ```{r}
 height_CI <- normal_CI(mean(s$height), sd(s$height), n)
@@ -172,7 +184,7 @@ CI_table
 
 ## Question 6
 
-Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in [5]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?
+Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in \[5\]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?
 
 ```{r}
 set.seed(1)  
@@ -204,6 +216,8 @@ head(sampling_means_df) # preview sampling means dataframe
 
 ```
 
+//challenge// I found it confusing to do 2:n_samples - I'm not sure if we were supposed to do something else or if I understood the question correctly.
+
 ```{r}
 sampling_means_summary <- data.frame(
   Variable = colnames(sampling_means_df),
@@ -230,8 +244,8 @@ comparison_df <- left_join(sampling_means_summary, se_estimates, by = "Variable"
 comparison_df
 ```
 
-Height, Weight, Age: SD is approximately equal to SE estimate
-Zombies killed: sqrt(mean/n) is similar to SD 
-Years of education: bootsrapped CI (SE estimate in this case) is similar to SD of sampling distribution
+Height, Weight, Age: SD is approximately equal to SE estimate Zombies killed: sqrt(mean/n) is similar to SD Years of education: bootsrapped CI (SE estimate in this case) is similar to SD of sampling distribution
 
 All of these statements indicate that the sampling distributions will be normally distributed.
+
+//challenge// I don't know if this is enough to say to they are all normally distributed approximately - I don't know if there was more code I should write to ascertain this. 
